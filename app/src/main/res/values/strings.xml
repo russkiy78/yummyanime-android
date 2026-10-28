@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">YummyAnime</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_catalog">Catalog</string>
+    <string name="nav_schedule">Schedule</string>
+    <string name="nav_lists">My lists</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="clear">Clear</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
+    <string name="save">Save</string>
+    <string name="send">Send</string>
+    <string name="see_all">See all</string>
+    <string name="any">Any</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="action_failed">Action failed</string>
+
+    <!-- Errors -->
+    <string name="error_network">No connection to the server. Check your internet connection.</string>
+    <string name="error_unknown">Something went wrong</string>
+    <string name="error_not_found">Not found</string>
+    <string name="error_unauthorized">Please log in again</string>
+    <string name="error_captcha">Too many attempts, please solve the captcha</string>
+
+    <!-- Home -->
+    <string name="home_continue">Continue watching</string>
+    <string name="home_top_season">Popular this season</string>
+    <string name="home_new_episodes">New episodes</string>
+    <string name="home_recommended">Recommended for you</string>
+    <string name="home_announcements">Announcements</string>
+    <string name="home_new">Recently added</string>
+    <string name="collections">Collections</string>
+    <string name="collection_by">Collection by %1$s</string>
+    <string name="episode_n">Episode %1$s</string>
+    <string name="ep_short">Ep. %1$s</string>
+
+    <!-- Catalog -->
+    <string name="search_hint">Search anime</string>
+    <string name="sort">Sort</string>
+    <string name="filters">Filters</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="sort_top">Top</string>
+    <string name="sort_rating">Rating</string>
+    <string name="sort_views">Popularity</string>
+    <string name="sort_year">Year</string>
+    <string name="sort_added">Recently added</string>
+    <string name="sort_title">Title</string>
+    <string name="sort_random">Random</string>
+    <string name="filter_type">Type</string>
+    <string name="filter_status">Status</string>
+    <string name="filter_translate">Translation</string>
+    <string name="filter_years">Years</string>
+    <string name="filter_genres">Genres</string>
+    <string name="filter_exclude">Hide from my lists</string>
+    <string name="year_from">From</string>
+    <string name="year_to">To</string>
+    <string name="type_tv">TV series</string>
+    <string name="type_movie">Movie</string>
+    <string name="type_ova">OVA</string>
+    <string name="type_ona">ONA</string>
+    <string name="type_special">Special</string>
+    <string name="type_short_tv">Short series</string>
+    <string name="type_short_film">Short film</string>
+    <string name="status_ongoing">Ongoing</string>
+    <string name="status_released">Released</string>
+    <string name="status_announcement">Announced</string>
+    <string name="translate_dubbing">Full dub</string>
+    <string name="translate_multivoice">Multi-voice</string>
+    <string name="translate_duet">Two voices</string>
+    <string name="translate_single">Single voice</string>
+    <string name="translate_subtitles">Subtitles</string>
+    <string name="exclude_completed">Completed</string>
+    <string name="exclude_dropped">Dropped</string>
+    <string name="exclude_planned">Planned</string>
+
+    <!-- Anime -->
+    <string name="watch">Watch</string>
+    <string name="watch_episode">Watch episode %1$s</string>
+    <string name="continue_episode">Continue ep. %1$s (%2$s)</string>
+    <string name="no_videos">No videos yet</string>
+    <string name="add_to_list">Add to list</string>
+    <string name="remove_from_list">Remove from list</string>
+    <string name="favorite">Favorite</string>
+    <string name="in_favorites">In favorites</string>
+    <string name="favorites">Favorites</string>
+    <string name="rate">Rate</string>
+    <string name="my_rating">My rating: %1$d</string>
+    <string name="remove_rating">Remove rating</string>
+    <string name="episodes">Episodes</string>
+    <string name="next_episode">Next episode</string>
+    <string name="studio">Studio</string>
+    <string name="director">Director</string>
+    <string name="source">Source</string>
+    <string name="translations">Translations</string>
+    <string name="top_place">Top</string>
+    <string name="description">Description</string>
+    <string name="viewing_order">Viewing order</string>
+    <string name="screenshots">Screenshots</string>
+    <string name="similar">Similar anime</string>
+    <string name="comments">Comments</string>
+    <string name="comments_count">Comments (%1$d)</string>
+    <string name="list_watching">Watching</string>
+    <string name="list_planned">Plan to watch</string>
+    <string name="list_completed">Completed</string>
+    <string name="list_dropped">Dropped</string>
+    <string name="list_on_hold">On hold</string>
+
+    <!-- Comments -->
+    <string name="sort_new">New</string>
+    <string name="sort_old">Old</string>
+    <string name="sort_best">Best</string>
+    <string name="write_comment">Write a comment…</string>
+    <string name="login_to_comment">Log in to comment</string>
+    <string name="no_comments">No comments yet</string>
+    <string name="show_replies">Show replies (%1$d)</string>
+    <string name="comment_deleted">Comment deleted</string>
+
+    <!-- Lists, history, schedule -->
+    <string name="login_for_lists">Log in to see your lists</string>
+    <string name="list_empty">This list is empty</string>
+    <string name="history">Watch history</string>
+    <string name="history_empty">You have not watched anything yet</string>
+    <string name="schedule_empty">No upcoming episodes</string>
+    <string name="episode_of">Episode %1$d of %2$s</string>
+
+    <!-- Profile -->
+    <string name="login">Log in</string>
+    <string name="logout">Log out</string>
+    <string name="logout_confirm">Log out of your YummyAnime account on this device?</string>
+    <string name="not_logged_in">You are not logged in</string>
+    <string name="registered">Registered %1$s</string>
+    <string name="notifications">Notifications</string>
+    <string name="no_notifications">No notifications</string>
+    <string name="settings">Settings</string>
+    <string name="open_website">Open on the website</string>
+    <string name="login_title">Welcome back</string>
+    <string name="login_subtitle">Log in with your yummyani.me account</string>
+    <string name="login_field">Email or nickname</string>
+    <string name="password">Password</string>
+    <string name="wrong_credentials">Wrong login or password</string>
+    <string name="register_on_site">No account? Sign up on yummyani.me</string>
+    <string name="captcha_title">Confirm that you are not a robot</string>
+
+    <!-- Settings -->
+    <string name="settings_language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="settings_player">Player</string>
+    <string name="settings_player_hint">Preferred player for anime you have not started yet. For started anime the last used player and dubbing are kept.</string>
+    <string name="player_auto">Automatic</string>
+    <string name="settings_auto_next">Play next episode automatically</string>
+    <string name="settings_auto_skip">Skip openings automatically</string>
+    <string name="settings_api">API</string>
+    <string name="settings_app_token_hint">Application token (X-Application header). The API docs ask every app to use its own token; create one on yummyani.me in the developer section.</string>
+    <string name="get_token">Get a token</string>
+    <string name="settings_about">About</string>
+    <string name="about_text">Version %1$s. Unofficial client for yummyani.me. All content is provided by the YummyAnime API and third-party video players.</string>
+
+    <!-- Player -->
+    <string name="player">Player</string>
+    <string name="dubbing">Dubbing / subtitles</string>
+    <string name="episodes_count">Episodes (%1$d)</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="player_crashed">The player stopped unexpectedly and was restarted</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="fullscreen">Fullscreen</string>
+    <string name="exit_fullscreen">Exit fullscreen</string>
+    <string name="skip_opening">Skip opening</string>
+    <string name="skip_opening_tv">Press OK to skip the opening</string>
+    <string name="opening_skipped">Opening skipped</string>
+    <string name="next_episode_starting">Starting the next episode…</string>
+    <string name="player_control_unsupported">This player cannot be controlled with the remote. Try another player.</string>
+    <string name="tv_hint">OK — play / pause   ◀ ▶ — seek   ▲ ▼ — episodes, dubbing and player</string>
+    <string name="tv_hint_limited">OK — play / pause   ▲ ▼ — episodes, dubbing and player (seeking is not supported by this player)</string>
+</resources>
