@@ -30,6 +30,7 @@
     <string name="error_unknown">Something went wrong</string>
     <string name="error_not_found">Not found</string>
     <string name="error_unauthorized">Please log in again</string>
+    <string name="error_rejected_as_bot">The server rejected the request as automated. Try again later or from another network, for example switch between Wi-Fi and mobile data.</string>
     <string name="error_captcha">Too many attempts, please solve the captcha</string>
 
     <!-- Home -->

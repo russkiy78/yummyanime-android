@@ -27,6 +27,7 @@
     <string name="error_unknown">Что-то пошло не так</string>
     <string name="error_not_found">Не найдено</string>
     <string name="error_unauthorized">Войдите в аккаунт заново</string>
+    <string name="error_rejected_as_bot">Сервер отклонил запрос как автоматический. Попробуйте позже или из другой сети, например переключитесь между Wi-Fi и мобильным интернетом.</string>
     <string name="error_captcha">Слишком много попыток, пройдите капчу</string>
 
     <string name="home_continue">Продолжить просмотр</string>

@@ -331,9 +331,11 @@ fun LoadingBox(modifier: Modifier = Modifier.fillMaxSize()) {
 fun errorMessage(error: Throwable): String = when (error) {
     is ApiException -> when {
         error.needsCaptcha -> stringResource(R.string.error_captcha)
+        error.isRejectedAsBot -> stringResource(R.string.error_rejected_as_bot)
         error.isUnauthorized -> stringResource(R.string.error_unauthorized)
         error.httpCode == 404 -> stringResource(R.string.error_not_found)
-        else -> error.message ?: stringResource(R.string.error_unknown)
+        // The server's own (localized) explanation plus a reference for bug reports.
+        else -> "${error.userText ?: stringResource(R.string.error_unknown)} (${error.reference})"
     }
     is IOException -> stringResource(R.string.error_network)
     else -> error.message ?: stringResource(R.string.error_unknown)

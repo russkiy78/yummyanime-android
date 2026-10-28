@@ -30,14 +30,35 @@ import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+/**
+ * An error answer of the API. [title] and [detail] are the server's own localized texts
+ * (`error_title` and `error`), [apiCode] is `error_code`.
+ */
 class ApiException(
     val httpCode: Int,
     val apiCode: Int?,
-    message: String,
-) : IOException(message) {
-    /** 420: the server wants an hCaptcha response (too many login attempts). */
-    val needsCaptcha: Boolean get() = httpCode == 420
-    val isUnauthorized: Boolean get() = httpCode == 401
+    val title: String? = null,
+    val detail: String? = null,
+) : IOException(listOfNotNull(title, detail).distinct().joinToString(": ").ifBlank { "HTTP $httpCode" }) {
+    /** The server wants an hCaptcha response: HTTP 420 per the docs, error_code 5 in practice (as the website handles it). */
+    val needsCaptcha: Boolean get() = httpCode == 420 || apiCode == CODE_CAPTCHA
+
+    /** The token is missing or expired. */
+    val isUnauthorized: Boolean get() = httpCode == 401 && (apiCode == null || apiCode == CODE_NOT_AUTHORIZED)
+
+    /** The server's anti-bot layer rejected the request as automated (it answers 202 instead of the data). */
+    val isRejectedAsBot: Boolean get() = httpCode == 202
+
+    /** The most useful text for the user: the server's explanation, else its title. */
+    val userText: String? get() = detail?.takeIf { it.isNotBlank() } ?: title?.takeIf { it.isNotBlank() }
+
+    /** Technical reference shown next to error texts, e.g. "HTTP 403 · code 6". */
+    val reference: String get() = listOfNotNull("HTTP $httpCode", apiCode?.let { "code $it" }).joinToString(" · ")
+
+    companion object {
+        const val CODE_NOT_AUTHORIZED = 1
+        const val CODE_CAPTCHA = 5
+    }
 }
 
 /** Adds the headers the API expects: app token, language, image formats and the user token. */
@@ -104,12 +125,12 @@ class YummyApi(
         }
         val response = call("POST", "profile/login", body = body)
         return (response as? JsonObject)?.get("token")?.jsonPrimitive?.contentOrNull
-            ?: throw ApiException(200, null, "No token in response")
+            ?: throw ApiException(200, null, detail = "No token in response")
     }
 
     suspend fun refreshToken(): String =
         call("GET", "profile/token").jsonObject["token"]?.jsonPrimitive?.contentOrNull
-            ?: throw ApiException(200, null, "No token in response")
+            ?: throw ApiException(200, null, detail = "No token in response")
 
     suspend fun logout() {
         call("POST", "profile/logout")
@@ -247,14 +268,17 @@ class YummyApi(
 
         val root = runCatching { json.parseToJsonElement(text) }.getOrNull()
         val obj = root as? JsonObject
+
+        // The anti-bot layer answers 202 instead of the data when it considers the client automated.
+        if (code == 202) throw ApiException(code, null, detail = obj?.get("error")?.jsonPrimitive?.contentOrNull)
+
         if (code !in 200..299 || obj?.containsKey("error") == true) {
             val apiCode = obj?.get("error_code")?.jsonPrimitive?.intOrNull
-            val message = obj?.get("error_title")?.jsonPrimitive?.contentOrNull
-                ?: obj?.get("error")?.jsonPrimitive?.contentOrNull
-                ?: "HTTP $code"
-            // error_code 1 = NotAuthorizedError: the token is invalid or expired.
-            if (code == 401 && apiCode == 1 && hadToken) prefs.clearSession()
-            throw ApiException(code, apiCode, message)
+            val title = obj?.get("error_title")?.jsonPrimitive?.contentOrNull
+            val detail = obj?.get("error")?.jsonPrimitive?.contentOrNull
+            val error = ApiException(code, apiCode, title, detail)
+            if (error.isUnauthorized && hadToken) prefs.clearSession()
+            throw error
         }
         return obj?.get("response") ?: JsonNull
     }

@@ -144,7 +144,12 @@ fun LoginScreen() {
                     modifier = Modifier.fillMaxWidth(),
                 )
                 state.error?.let {
-                    val text = if (it is ApiException && it.isUnauthorized) stringResource(R.string.wrong_credentials) else errorMessage(it)
+                    // Login errors carry a precise server text ("user not found", "invalid password", ...).
+                    val text = when {
+                        it is ApiException && it.userText != null && !it.isRejectedAsBot -> "${it.userText} (${it.reference})"
+                        it is ApiException && it.httpCode == 401 -> stringResource(R.string.wrong_credentials)
+                        else -> errorMessage(it)
+                    }
                     Text(text, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                 }
                 if (state.loading) {
