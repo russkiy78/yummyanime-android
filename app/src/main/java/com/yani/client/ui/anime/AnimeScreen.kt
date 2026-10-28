@@ -88,6 +88,7 @@ import com.yani.client.ui.common.YChip
 import com.yani.client.ui.common.appViewModel
 import com.yani.client.ui.common.load
 import com.yani.client.ui.common.dataOrNull
+import com.yani.client.ui.common.onAccountChange
 import com.yani.client.ui.theme.Gold
 import com.yani.client.util.currentLocale
 import com.yani.client.util.formatDate
@@ -127,6 +128,8 @@ class AnimeViewModel(
 
     init {
         reload()
+        // List, favorite, rating and episode progress belong to the account.
+        onAccountChange(prefs, ::reload)
     }
 
     fun reload() {

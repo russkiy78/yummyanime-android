@@ -3,9 +3,15 @@ package com.yani.client.ui.common
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yani.client.AppContainer
 import com.yani.client.YummyApplication
+import com.yani.client.data.Prefs
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface Load<out T> {
@@ -22,6 +28,13 @@ suspend fun <T> load(block: suspend () -> T): Load<T> = try {
     throw e
 } catch (e: Exception) {
     Load.Error(e)
+}
+
+/** Calls [action] whenever another account becomes active, including logging in and out, so user data is reloaded. */
+fun ViewModel.onAccountChange(prefs: Prefs, action: () -> Unit) {
+    viewModelScope.launch {
+        prefs.session.map { it?.userId }.distinctUntilChanged().drop(1).collect { action() }
+    }
 }
 
 @Composable

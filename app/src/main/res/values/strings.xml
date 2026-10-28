@@ -137,7 +137,10 @@
     <!-- Profile -->
     <string name="login">Log in</string>
     <string name="logout">Log out</string>
-    <string name="logout_confirm">Log out of your YummyAnime account on this device?</string>
+    <string name="logout_confirm">Log out of %1$s on this device?</string>
+    <string name="switch_account">Switch account</string>
+    <string name="choose_account">Choose an account</string>
+    <string name="add_account">Add account</string>
     <string name="not_logged_in">You are not logged in</string>
     <string name="registered">Registered %1$s</string>
     <string name="notifications">Notifications</string>

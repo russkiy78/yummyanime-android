@@ -68,6 +68,7 @@ import com.yani.client.data.AnimeItem
 import com.yani.client.data.CatalogQuery
 import com.yani.client.data.GenreGroup
 import com.yani.client.data.GenresResponse
+import com.yani.client.data.Prefs
 import com.yani.client.data.YummyApi
 import com.yani.client.ui.common.AnimePosterCard
 import com.yani.client.ui.common.AppTopBar
@@ -81,6 +82,7 @@ import com.yani.client.ui.common.YIconButton
 import com.yani.client.ui.common.appContainer
 import com.yani.client.ui.common.appViewModel
 import com.yani.client.ui.common.load
+import com.yani.client.ui.common.onAccountChange
 import com.yani.client.ui.common.posterWidth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -102,7 +104,7 @@ data class CatalogState(
     val endReached: Boolean = false,
 )
 
-class CatalogViewModel(private val api: YummyApi, presetGenre: Int?) : ViewModel() {
+class CatalogViewModel(private val api: YummyApi, prefs: Prefs, presetGenre: Int?) : ViewModel() {
     private val _state = MutableStateFlow(CatalogState(CatalogQuery(genres = setOfNotNull(presetGenre))))
     val state = _state.asStateFlow()
 
@@ -114,6 +116,8 @@ class CatalogViewModel(private val api: YummyApi, presetGenre: Int?) : ViewModel
     init {
         reload()
         viewModelScope.launch { _genres.value = runCatching { api.genres() }.getOrNull() }
+        // "Hide from my lists" depends on the account's lists.
+        onAccountChange(prefs) { if (_state.value.query.excludeLists.isNotEmpty()) reload() }
     }
 
     fun setText(text: String) {
@@ -175,7 +179,7 @@ private val sortOptions = listOf(
 
 @Composable
 fun CatalogScreen(presetGenre: Int?, presetTitle: String?) {
-    val vm = appViewModel(key = "catalog-$presetGenre") { CatalogViewModel(it.api, presetGenre) }
+    val vm = appViewModel(key = "catalog-$presetGenre") { CatalogViewModel(it.api, it.prefs, presetGenre) }
     val prefs = appContainer().prefs
     val state by vm.state.collectAsStateWithLifecycle()
     val genres by vm.genres.collectAsStateWithLifecycle()

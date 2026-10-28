@@ -250,7 +250,9 @@ data class Profile(
     @SerialName("last_online") val lastOnline: Long? = null,
     val notifications: NotificationsInfo? = null,
     val messages: MessagesInfo? = null,
-)
+) {
+    val avatarUrl: String? get() = absUrl(avatars?.big ?: avatars?.small)
+}
 
 @Serializable
 data class TopCarousel(val season: Int? = null, val year: Int? = null, val items: List<AnimeItem> = emptyList())

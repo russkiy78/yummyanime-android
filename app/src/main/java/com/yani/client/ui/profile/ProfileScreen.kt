@@ -4,7 +4,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Collections
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -42,11 +44,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -58,11 +62,14 @@ import com.yani.client.R
 import com.yani.client.data.AuthManager
 import com.yani.client.data.Prefs
 import com.yani.client.data.Profile
+import com.yani.client.data.Session
 import com.yani.client.data.YummyApi
 import com.yani.client.data.absUrl
 import com.yani.client.ui.Routes
+import com.yani.client.ui.common.LocalIsTv
 import com.yani.client.ui.common.LocalNav
 import com.yani.client.ui.common.ScreenPadding
+import com.yani.client.ui.common.UserAvatar
 import com.yani.client.ui.common.YButton
 import com.yani.client.ui.common.appViewModel
 import com.yani.client.ui.common.focusBorder
@@ -74,27 +81,27 @@ import kotlinx.coroutines.launch
 
 class ProfileViewModel(private val api: YummyApi, private val prefs: Prefs, private val auth: AuthManager) : ViewModel() {
     val session = prefs.session
+    val accounts = prefs.accounts
     private val _profile = MutableStateFlow<Profile?>(null)
     val profile = _profile.asStateFlow()
 
     fun refresh() {
-        if (prefs.session.value == null) {
-            _profile.value = null
-            return
-        }
+        val userId = prefs.session.value?.userId
+        // Never show the previous account's banner and counters while the new one loads.
+        if (_profile.value?.id != userId) _profile.value = null
+        if (userId == null) return
         viewModelScope.launch {
             runCatching { api.profile() }.onSuccess {
-                _profile.value = it
-                prefs.updateProfile(it.nickname, absUrl(it.avatars?.big ?: it.avatars?.small))
+                prefs.updateAccount(it.id) { account -> account.copy(nickname = it.nickname, avatar = it.avatarUrl) }
+                if (it.id == prefs.session.value?.userId) _profile.value = it
             }
         }
     }
 
+    fun switchAccount(userId: Int) = prefs.switchAccount(userId)
+
     fun logout() {
-        viewModelScope.launch {
-            auth.logout()
-            _profile.value = null
-        }
+        viewModelScope.launch { auth.logout() }
     }
 }
 
@@ -102,10 +109,14 @@ class ProfileViewModel(private val api: YummyApi, private val prefs: Prefs, priv
 fun ProfileScreen() {
     val vm = appViewModel { ProfileViewModel(it.api, it.prefs, it.auth) }
     val session by vm.session.collectAsStateWithLifecycle()
+    val accounts by vm.accounts.collectAsStateWithLifecycle()
     val profile by vm.profile.collectAsStateWithLifecycle()
     val nav = LocalNav.current
     val locale = currentLocale()
     var confirmLogout by remember { mutableStateOf(false) }
+    val isTv = LocalIsTv.current
+    val loginFocus = remember { FocusRequester() }
+    var focusLoginAfterLogout by remember { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refresh() }
     LaunchedEffect(session?.userId) { vm.refresh() }
@@ -128,7 +139,14 @@ fun ProfileScreen() {
                 Spacer(Modifier.height(12.dp))
                 Text(stringResource(R.string.not_logged_in), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(16.dp))
-                YButton(stringResource(R.string.login), onClick = { nav.openRoute(Routes.LOGIN) })
+                YButton(stringResource(R.string.login), onClick = { nav.openRoute(Routes.LOGIN) }, modifier = Modifier.focusRequester(loginFocus))
+                // The focused "Log out" row is gone; keep the D-pad focus in the content, next to the saved accounts.
+                if (focusLoginAfterLogout) {
+                    LaunchedEffect(Unit) {
+                        runCatching { loginFocus.requestFocus() }
+                        focusLoginAfterLogout = false
+                    }
+                }
             }
         } else {
             Box(Modifier.fillMaxWidth()) {
@@ -147,14 +165,7 @@ fun ProfileScreen() {
                         .padding(ScreenPadding),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    AsyncImage(
-                        model = absUrl(profile?.avatars?.big) ?: s.avatar,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clip(CircleShape),
-                    )
+                    UserAvatar(absUrl(profile?.avatars?.big) ?: s.avatar, Modifier.size(72.dp))
                     Spacer(Modifier.width(16.dp))
                     Column {
                         Text(profile?.nickname ?: s.nickname, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -177,6 +188,19 @@ fun ProfileScreen() {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Spacer(Modifier.height(8.dp))
+            // Other saved accounts: switching to one needs no password.
+            val others = accounts.filter { it.userId != s?.userId }
+            if (others.isNotEmpty()) {
+                Text(
+                    stringResource(if (s == null) R.string.choose_account else R.string.switch_account),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+                // Rows are not keyed, so after a switch the D-pad focus stays on the same row.
+                others.forEach { account -> AccountRow(account) { vm.switchAccount(account.userId) } }
+                Spacer(Modifier.height(8.dp))
+            }
             if (s != null) {
                 MenuRow(Icons.Filled.Notifications, stringResource(R.string.notifications), badge = profile?.notifications?.count ?: 0) {
                     nav.openRoute(Routes.NOTIFICATIONS)
@@ -189,6 +213,7 @@ fun ProfileScreen() {
                 nav.openUrl(if (s != null) "https://yummyani.me/users/id${s.userId}" else "https://yummyani.me/")
             }
             if (s != null) {
+                MenuRow(Icons.Filled.PersonAdd, stringResource(R.string.add_account)) { nav.openRoute(Routes.LOGIN) }
                 MenuRow(Icons.AutoMirrored.Filled.Logout, stringResource(R.string.logout)) { confirmLogout = true }
             }
         }
@@ -198,10 +223,11 @@ fun ProfileScreen() {
         AlertDialog(
             onDismissRequest = { confirmLogout = false },
             title = { Text(stringResource(R.string.logout)) },
-            text = { Text(stringResource(R.string.logout_confirm)) },
+            text = { Text(stringResource(R.string.logout_confirm, session?.nickname.orEmpty())) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmLogout = false
+                    focusLoginAfterLogout = isTv
                     vm.logout()
                 }) { Text(stringResource(R.string.logout)) }
             },
@@ -212,6 +238,32 @@ fun ProfileScreen() {
 
 @Composable
 fun MenuRow(icon: ImageVector, text: String, badge: Int = 0, onClick: () -> Unit) {
+    MenuCard(onClick) {
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(16.dp))
+        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        if (badge > 0) Badge { Text(badge.toString()) }
+    }
+}
+
+/** Same height as [MenuRow], with the avatar centered where its icon is and the name aligned with its text. */
+@Composable
+private fun AccountRow(account: Session, onClick: () -> Unit) {
+    MenuCard(onClick, PaddingValues(12.dp)) {
+        UserAvatar(account.avatar, Modifier.size(32.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(
+            account.nickname,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun MenuCard(onClick: () -> Unit, padding: PaddingValues = PaddingValues(16.dp), content: @Composable RowScope.() -> Unit) {
     val source = remember { MutableInteractionSource() }
     val shape = RoundedCornerShape(12.dp)
     Card(
@@ -223,11 +275,6 @@ fun MenuRow(icon: ImageVector, text: String, badge: Int = 0, onClick: () -> Unit
             .fillMaxWidth()
             .focusBorder(source, shape, scale = 1.02f),
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(16.dp))
-            Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            if (badge > 0) Badge { Text(badge.toString()) }
-        }
+        Row(Modifier.padding(padding), verticalAlignment = Alignment.CenterVertically, content = content)
     }
 }

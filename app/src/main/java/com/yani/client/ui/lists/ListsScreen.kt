@@ -59,6 +59,7 @@ import com.yani.client.ui.common.YButton
 import com.yani.client.ui.common.appViewModel
 import com.yani.client.ui.common.dataOrNull
 import com.yani.client.ui.common.load
+import com.yani.client.ui.common.onAccountChange
 import com.yani.client.ui.common.posterWidth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -165,12 +166,13 @@ data class HistoryState(
     val endReached: Boolean = false,
 )
 
-class HistoryViewModel(private val api: YummyApi) : ViewModel() {
+class HistoryViewModel(private val api: YummyApi, prefs: Prefs) : ViewModel() {
     private val _state = MutableStateFlow(HistoryState())
     val state = _state.asStateFlow()
 
     init {
         loadMore()
+        onAccountChange(prefs, ::reload)
     }
 
     fun reload() {
@@ -192,7 +194,7 @@ class HistoryViewModel(private val api: YummyApi) : ViewModel() {
 
 @Composable
 fun HistoryScreen() {
-    val vm = appViewModel { HistoryViewModel(it.api) }
+    val vm = appViewModel { HistoryViewModel(it.api, it.prefs) }
     val state by vm.state.collectAsStateWithLifecycle()
     val nav = LocalNav.current
     val gridState = rememberLazyGridState()

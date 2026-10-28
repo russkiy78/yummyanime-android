@@ -128,7 +128,10 @@
 
     <string name="login">Войти</string>
     <string name="logout">Выйти</string>
-    <string name="logout_confirm">Выйти из аккаунта YummyAnime на этом устройстве?</string>
+    <string name="logout_confirm">Выйти из аккаунта %1$s на этом устройстве?</string>
+    <string name="switch_account">Сменить аккаунт</string>
+    <string name="choose_account">Выберите аккаунт</string>
+    <string name="add_account">Добавить аккаунт</string>
     <string name="not_logged_in">Вы не вошли в аккаунт</string>
     <string name="registered">Зарегистрирован %1$s</string>
     <string name="notifications">Уведомления</string>

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,6 +44,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -53,6 +55,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yani.client.R
+import com.yani.client.data.Session
 import com.yani.client.player.PlayerActivity
 import com.yani.client.ui.anime.AnimeScreen
 import com.yani.client.ui.anime.CommentsScreen
@@ -62,6 +65,8 @@ import com.yani.client.ui.collections.CollectionsScreen
 import com.yani.client.ui.common.LocalIsTv
 import com.yani.client.ui.common.LocalNav
 import com.yani.client.ui.common.NavActions
+import com.yani.client.ui.common.UserAvatar
+import com.yani.client.ui.common.appContainer
 import com.yani.client.ui.common.focusBorder
 import com.yani.client.ui.home.HomeScreen
 import com.yani.client.ui.lists.HistoryScreen
@@ -103,6 +108,16 @@ private val topLevel = listOf(
     TopLevel(Routes.PROFILE, Routes.PROFILE, R.string.nav_profile, Icons.Filled.Person),
 )
 
+/** The profile item shows who is logged in, which matters when several accounts are saved. */
+@Composable
+private fun TopLevelIcon(item: TopLevel, session: Session?) {
+    if (item.route == Routes.PROFILE && session != null) {
+        UserAvatar(session.avatar, Modifier.size(24.dp), fallback = item.icon)
+    } else {
+        Icon(item.icon, null)
+    }
+}
+
 private fun NavController.navigateTopLevel(route: String) = navigate(route) {
     popUpTo(graph.findStartDestination().id) { saveState = true }
     launchSingleTop = true
@@ -127,6 +142,7 @@ fun AppRoot(deepLinkAlias: String?, onDeepLinkConsumed: () -> Unit) {
     val actions = remember(nav) { navActions(nav, context) }
     val entry by nav.currentBackStackEntryAsState()
     val currentRoute = entry?.destination?.route
+    val session by appContainer().prefs.session.collectAsStateWithLifecycle()
     val useRail = LocalIsTv.current || LocalConfiguration.current.screenWidthDp >= 840
 
     LaunchedEffect(deepLinkAlias) {
@@ -150,7 +166,7 @@ fun AppRoot(deepLinkAlias: String?, onDeepLinkConsumed: () -> Unit) {
                         NavigationRailItem(
                             selected = currentRoute == item.route,
                             onClick = { nav.navigateTopLevel(item.navigateTo) },
-                            icon = { Icon(item.icon, null) },
+                            icon = { TopLevelIcon(item, session) },
                             label = { Text(stringResource(item.label)) },
                             interactionSource = source,
                             modifier = Modifier
@@ -171,7 +187,7 @@ fun AppRoot(deepLinkAlias: String?, onDeepLinkConsumed: () -> Unit) {
                                 NavigationBarItem(
                                     selected = currentRoute == item.route,
                                     onClick = { nav.navigateTopLevel(item.navigateTo) },
-                                    icon = { Icon(item.icon, null) },
+                                    icon = { TopLevelIcon(item, session) },
                                     label = { Text(stringResource(item.label), maxLines = 1) },
                                 )
                             }

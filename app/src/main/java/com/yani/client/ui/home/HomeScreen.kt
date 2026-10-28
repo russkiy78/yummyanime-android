@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.yani.client.R
 import com.yani.client.data.Feed
+import com.yani.client.data.Prefs
 import com.yani.client.data.YummyApi
 import com.yani.client.ui.Routes
 import com.yani.client.ui.collections.CollectionCard
@@ -46,17 +47,20 @@ import com.yani.client.ui.common.WatchCard
 import com.yani.client.ui.common.appViewModel
 import com.yani.client.ui.common.dataOrNull
 import com.yani.client.ui.common.load
+import com.yani.client.ui.common.onAccountChange
 import com.yani.client.ui.theme.Accent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class HomeViewModel(private val api: YummyApi) : ViewModel() {
+class HomeViewModel(private val api: YummyApi, prefs: Prefs) : ViewModel() {
     private val _state = MutableStateFlow<Load<Feed>>(Load.Loading)
     val state = _state.asStateFlow()
 
     init {
         reload()
+        // "Continue watching" and recommendations belong to the account.
+        onAccountChange(prefs, ::reload)
     }
 
     fun reload() {
@@ -76,7 +80,7 @@ class HomeViewModel(private val api: YummyApi) : ViewModel() {
 
 @Composable
 fun HomeScreen() {
-    val vm = appViewModel { HomeViewModel(it.api) }
+    val vm = appViewModel { HomeViewModel(it.api, it.prefs) }
     val state by vm.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshQuietly() }
 

@@ -6,37 +6,40 @@ class AuthManager(
     private val api: YummyApi,
     private val prefs: Prefs,
 ) {
-    /** Logs in, then loads the profile to learn the user id. Throws [ApiException] (420 = captcha needed). */
+    /**
+     * Logs in, then loads the profile to learn the user id. The account is added to the saved ones and becomes active.
+     * Throws [ApiException] (420 = captcha needed).
+     */
     suspend fun login(login: String, password: String, captcha: String? = null) {
         val token = api.login(login.trim(), password, captcha)
-        prefs.setPendingToken(token)
-        try {
-            val profile = api.profile()
-            prefs.saveSession(Session(token, profile.id, profile.nickname, absUrl(profile.avatars?.big ?: profile.avatars?.small)))
-        } catch (e: Exception) {
-            prefs.setPendingToken(null)
-            throw e
-        }
+        val profile = api.profile(token)
+        prefs.addAccount(Session(token, profile.id, profile.nickname, profile.avatarUrl))
     }
 
-    /** Tokens live two weeks; the API docs recommend refreshing every 2-3 days. */
+    /**
+     * Tokens live two weeks; the API docs recommend refreshing every 2-3 days. All saved accounts are refreshed,
+     * so switching to one that was not used for a while still works. Rejected tokens are forgotten by [YummyApi].
+     */
     suspend fun refreshIfNeeded() {
-        prefs.session.value ?: return
-        val age = System.currentTimeMillis() - prefs.tokenSavedAt
-        if (age < TimeUnit.DAYS.toMillis(2)) return
-        try {
-            prefs.updateToken(api.refreshToken())
-            val profile = api.profile()
-            prefs.updateProfile(profile.nickname, absUrl(profile.avatars?.big ?: profile.avatars?.small))
-        } catch (e: ApiException) {
-            if (e.isUnauthorized) prefs.clearSession()
-        } catch (_: Exception) {
-            // Offline: try again next time.
+        for (account in prefs.accounts.value) {
+            val age = System.currentTimeMillis() - account.tokenSavedAt
+            if (age < TimeUnit.DAYS.toMillis(2)) continue
+            try {
+                val token = api.refreshToken(account.token)
+                val profile = api.profile(token)
+                prefs.updateAccount(account.userId) {
+                    it.copy(token = token, tokenSavedAt = System.currentTimeMillis(), nickname = profile.nickname, avatar = profile.avatarUrl)
+                }
+            } catch (_: Exception) {
+                // Offline: try again next time.
+            }
         }
     }
 
+    /** Logs the active account out and removes it from the device; other saved accounts stay. */
     suspend fun logout() {
-        runCatching { api.logout() }
-        prefs.clearSession()
+        val session = prefs.session.value ?: return
+        prefs.removeAccount(session.userId)
+        runCatching { api.logout(session.token) }
     }
 }

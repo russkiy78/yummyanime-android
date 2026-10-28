@@ -61,7 +61,7 @@ class ApiException(
     }
 }
 
-/** Adds the headers the API expects: app token, language, image formats and the user token. */
+/** Adds the headers the API expects: app token, language and image formats. The user token is added by [YummyApi]. */
 class ApiHeadersInterceptor(private val prefs: Prefs) : Interceptor {
     private val userAgent = "YummyAndroid/${BuildConfig.VERSION_NAME} (Android ${Build.VERSION.RELEASE})"
 
@@ -72,7 +72,6 @@ class ApiHeadersInterceptor(private val prefs: Prefs) : Interceptor {
             .header("User-Agent", userAgent)
         val appToken = prefs.settings.value.appToken.ifBlank { BuildConfig.APP_TOKEN }
         if (appToken.isNotBlank()) builder.header("X-Application", appToken)
-        prefs.token?.let { builder.header("Authorization", "Yummy $it") }
         return chain.proceed(builder.build())
     }
 }
@@ -123,20 +122,21 @@ class YummyApi(
             put("need_json", true)
             if (captcha != null) put("recaptcha_response", captcha)
         }
-        val response = call("POST", "profile/login", body = body)
+        val response = call("POST", "profile/login", body = body, token = null)
         return (response as? JsonObject)?.get("token")?.jsonPrimitive?.contentOrNull
             ?: throw ApiException(200, null, detail = "No token in response")
     }
 
-    suspend fun refreshToken(): String =
-        call("GET", "profile/token").jsonObject["token"]?.jsonPrimitive?.contentOrNull
+    suspend fun refreshToken(token: String): String =
+        call("GET", "profile/token", token = token).jsonObject["token"]?.jsonPrimitive?.contentOrNull
             ?: throw ApiException(200, null, detail = "No token in response")
 
-    suspend fun logout() {
-        call("POST", "profile/logout")
+    suspend fun logout(token: String) {
+        call("POST", "profile/logout", token = token)
     }
 
-    suspend fun profile(): Profile = get("profile")
+    /** Profile of the active account, or of the account [token] belongs to. */
+    suspend fun profile(token: String? = prefs.token): Profile = decode(call("GET", "profile", token = token))
 
     suspend fun notifications(offset: Int, limit: Int = 30): List<NotificationItem> =
         get("profile/notifications", mapOf("offset" to offset, "limit" to limit))
@@ -248,6 +248,7 @@ class YummyApi(
         path: String,
         query: Map<String, Any?> = emptyMap(),
         body: JsonObject? = null,
+        token: String? = prefs.token,
     ): JsonElement {
         val url = BASE_URL.toHttpUrl().newBuilder().addPathSegments(path).apply {
             for ((key, value) in query) {
@@ -263,8 +264,10 @@ class YummyApi(
             method == "GET" || method == "DELETE" -> null
             else -> "{}".toRequestBody(JSON_MEDIA)
         }
-        val hadToken = prefs.token != null
-        val (code, text) = http.newCall(Request.Builder().url(url).method(method, requestBody).build()).fetch()
+        val request = Request.Builder().url(url).method(method, requestBody)
+            .apply { if (token != null) header("Authorization", "Yummy $token") }
+            .build()
+        val (code, text) = http.newCall(request).fetch()
 
         val root = runCatching { json.parseToJsonElement(text) }.getOrNull()
         val obj = root as? JsonObject
@@ -277,7 +280,7 @@ class YummyApi(
             val title = obj?.get("error_title")?.jsonPrimitive?.contentOrNull
             val detail = obj?.get("error")?.jsonPrimitive?.contentOrNull
             val error = ApiException(code, apiCode, title, detail)
-            if (error.isUnauthorized && hadToken) prefs.clearSession()
+            if (error.isUnauthorized && token != null) prefs.forgetToken(token)
             throw error
         }
         return obj?.get("response") ?: JsonNull

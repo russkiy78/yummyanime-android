@@ -41,7 +41,7 @@ Every commit to `main` builds and publishes a new version automatically.
 
 ## Features
 
-- **Account.** Log in with your email or nickname (with hCaptcha when the server asks for it); the session token is refreshed automatically.
+- **Accounts.** Log in with your email or nickname (with hCaptcha when the server asks for it). Several accounts can stay logged in on one device; switch between them in Profile without typing the password again, which is handy on a shared TV. Session tokens are refreshed automatically.
 - **Home.** Continue watching, popular this season, new episodes, recommendations, announcements, recently added and collections.
 - **Catalog and search.** Sorting and filters by type, status, translation, years and genres; hide titles that are already in your lists.
 - **Anime page.**

@@ -27,9 +27,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -49,7 +51,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -275,6 +279,24 @@ fun RatingBadge(text: String, modifier: Modifier = Modifier) {
         Icon(Icons.Filled.Star, null, tint = Gold, modifier = Modifier.size(12.dp))
         Spacer(Modifier.width(2.dp))
         Text(text, style = MaterialTheme.typography.labelSmall, color = Color.White)
+    }
+}
+
+/** Round user picture. [fallback] is shown while it loads and when there is none. */
+@Composable
+fun UserAvatar(url: String?, modifier: Modifier = Modifier, fallback: ImageVector = Icons.Filled.AccountCircle) {
+    var loaded by remember(url) { mutableStateOf(false) }
+    Box(modifier.clip(CircleShape), contentAlignment = Alignment.Center) {
+        if (!loaded) Icon(fallback, null, Modifier.fillMaxSize())
+        if (url != null) {
+            AsyncImage(
+                model = url,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                onSuccess = { loaded = true },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
