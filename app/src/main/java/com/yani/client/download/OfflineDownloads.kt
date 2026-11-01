@@ -64,13 +64,20 @@ data class EpisodeInfo(
     val headers: Map<String, String> = emptyMap(),
 )
 
-data class OfflineEpisode(val download: Download, val info: EpisodeInfo) {
-    val id: String get() = download.request.id
-    val state: Int get() = download.state
-    val bytes: Long get() = download.bytesDownloaded
-
+/**
+ * A download as it was when the list was built. Media3 updates the progress of a running download in place,
+ * so state, bytes and progress are copied: otherwise every new list would equal the previous one and the
+ * screens would show the progress only when opened.
+ */
+data class OfflineEpisode(
+    val download: Download,
+    val info: EpisodeInfo,
+    val state: Int = download.state,
+    val bytes: Long = download.bytesDownloaded,
     /** 0..1, or null while unknown. */
-    val progress: Float? get() = download.percentDownloaded.takeIf { it >= 0 }?.let { it / 100f }
+    val progress: Float? = download.percentDownloaded.takeIf { it >= 0 }?.let { it / 100f },
+) {
+    val id: String get() = download.request.id
     val completed: Boolean get() = state == Download.STATE_COMPLETED
     val failed: Boolean get() = state == Download.STATE_FAILED
 }
