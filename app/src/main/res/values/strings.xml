@@ -194,6 +194,10 @@
     <string name="download_episodes">Download episodes</string>
     <string name="download_select_hint">Choose the dubbing and the episodes. They open one by one in their player so the app can find the video, then download in the background.</string>
     <string name="download_selected">Download (%1$d)</string>
+    <string name="download_episode">Download episode</string>
+    <string name="download_rest">Download the rest (%1$d)</string>
+    <string name="download_episode_done">Downloaded</string>
+    <string name="download_episode_progress">Downloading %1$d%%</string>
     <string name="select_all">Select all</string>
     <string name="select_none">Clear</string>
     <string name="downloads_empty">Downloaded episodes appear here, to watch without internet. You can download them on an anime page.</string>

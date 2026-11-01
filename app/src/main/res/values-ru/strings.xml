@@ -183,6 +183,10 @@
     <string name="download_episodes">Скачать серии</string>
     <string name="download_select_hint">Выберите озвучку и серии. Они по очереди откроются в своём плеере, чтобы приложение нашло видео, а затем скачаются в фоне.</string>
     <string name="download_selected">Скачать (%1$d)</string>
+    <string name="download_episode">Скачать серию</string>
+    <string name="download_rest">Скачать оставшиеся (%1$d)</string>
+    <string name="download_episode_done">Серия скачана</string>
+    <string name="download_episode_progress">Скачивается %1$d%%</string>
     <string name="select_all">Выбрать все</string>
     <string name="select_none">Снять выбор</string>
     <string name="downloads_empty">Здесь появятся скачанные серии — их можно смотреть без интернета. Скачать серии можно на странице аниме.</string>

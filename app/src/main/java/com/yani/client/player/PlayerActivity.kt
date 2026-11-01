@@ -38,6 +38,7 @@ import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.yani.client.R
 import com.yani.client.YummyApplication
+import com.yani.client.download.CaptureActivity
 import com.yani.client.ui.common.LocalIsTv
 import com.yani.client.ui.common.isTelevision
 import com.yani.client.ui.theme.YummyTheme
@@ -118,6 +119,11 @@ class PlayerActivity : AppCompatActivity() {
                             },
                             onCenterKey = ::onCenter,
                             onSeek = { seconds -> showControls(); vm.seekBy(seconds) },
+                            // The download screen covers this one, which pauses the video (see onStop).
+                            onDownload = { ids ->
+                                panelOpen = false
+                                startActivity(CaptureActivity.intent(this, intent.getIntExtra(EXTRA_ANIME_ID, 0), ids))
+                            },
                         ),
                     )
                 }

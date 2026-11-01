@@ -50,6 +50,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.MovieFilter
@@ -83,6 +86,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.exoplayer.offline.Download
 import com.yani.client.R
 import com.yani.client.data.Video
 import com.yani.client.data.isFinished
@@ -90,6 +94,7 @@ import com.yani.client.ui.common.ErrorBox
 import com.yani.client.ui.common.MessageBox
 import com.yani.client.ui.common.YButton
 import com.yani.client.ui.common.YChip
+import com.yani.client.ui.common.appContainer
 import com.yani.client.ui.common.focusBorder
 import com.yani.client.util.formatDuration
 import kotlinx.coroutines.delay
@@ -106,6 +111,8 @@ class PlayerScreenActions(
     /** Remote OK on the video: skips the opening while the hint is shown, otherwise play/pause. */
     val onCenterKey: () -> Unit,
     val onSeek: (seconds: Int) -> Unit,
+    /** Downloads these episodes for offline viewing. */
+    val onDownload: (videoIds: List<Long>) -> Unit,
 )
 
 /**
@@ -416,7 +423,7 @@ private fun TvOsd(visible: Boolean, ui: PlayerUi, playback: Playback, modifier: 
     }
 }
 
-private const val PANEL_HEADER_ITEMS = 5
+private const val PANEL_HEADER_ITEMS = 6
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -487,6 +494,9 @@ private fun EpisodePanel(
             }
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
+            DownloadButtons(ui, actions.onDownload)
+        }
+        item(span = { GridItemSpan(maxLineSpan) }) {
             Column {
                 PanelLabel(stringResource(R.string.player))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -516,6 +526,40 @@ private fun EpisodePanel(
                     actions.onEpisodeChosen()
                 },
             )
+        }
+    }
+}
+
+/** Download of the current episode, and of the ones after it in the same player and dubbing that are not downloaded yet. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DownloadButtons(ui: PlayerUi, onDownload: (List<Long>) -> Unit) {
+    val current = ui.current ?: return
+    val downloads by appContainer().downloads.episodes.collectAsStateWithLifecycle()
+    val byVideo = remember(downloads) { downloads.associateBy { it.info.videoId } }
+    val download = byVideo[current.id]?.takeIf { !it.failed }
+    val rest = if (ui.currentIndex < 0) emptyList() else ui.episodes.drop(ui.currentIndex + 1).filter { byVideo[it.id]?.failed != false }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        when {
+            download == null -> YButton(
+                stringResource(R.string.download_episode),
+                onClick = { onDownload(listOf(current.id)) },
+                icon = Icons.Filled.Download,
+                primary = false,
+            )
+            download.completed -> YButton(stringResource(R.string.download_episode_done), onClick = {}, icon = Icons.Filled.DownloadDone, primary = false, enabled = false)
+            else -> YButton(
+                download.progress?.takeIf { download.state == Download.STATE_DOWNLOADING }
+                    ?.let { stringResource(R.string.download_episode_progress, (it * 100).toInt()) }
+                    ?: stringResource(R.string.download_state_queued),
+                onClick = {},
+                icon = Icons.Filled.Downloading,
+                primary = false,
+                enabled = false,
+            )
+        }
+        if (rest.isNotEmpty()) {
+            YButton(stringResource(R.string.download_rest, rest.size), onClick = { onDownload(rest.map { it.id }) }, icon = Icons.Filled.Download, primary = false)
         }
     }
 }

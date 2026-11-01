@@ -56,6 +56,7 @@ Every commit to `main` builds and publishes a new version automatically.
   - Portrait, landscape windowed (video and panel side by side) and fullscreen modes. Switching modes does not reload the video.
 - **Downloads for offline viewing.**
   - Download single episodes or a whole season in the chosen dubbing, from any of the site's players, for example to watch on a plane.
+    Start on the anime page, or in the player panel for the current episode and the ones after it.
   - The app opens each episode in its own player, muted, finds the video stream the player loads and downloads it in the background with a progress notification.
   - Downloaded episodes play without a connection in a built-in player: next episode, skip opening and resume work as online. Watch progress reaches your account once you are online again.
   - Delete episodes one by one or a whole anime, or let the app delete an episode after you have watched it (Settings → Downloads).
