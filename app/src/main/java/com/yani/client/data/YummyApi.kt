@@ -198,9 +198,12 @@ class YummyApi(
     suspend fun watchHistory(offset: Int, limit: Int = 20): List<AnimeItem> =
         get("video/watch-history", mapOf("offset" to offset, "limit" to limit))
 
-    /** Same payload as the website: current position, duration and the seconds seen since the last sync. */
-    suspend fun markWatched(videoId: Long, time: Int, duration: Int, times: List<Int>) {
-        call("PUT", "video/$videoId", body = buildJsonObject {
+    /**
+     * Same payload as the website: current position, duration and the seconds seen since the last sync.
+     * [token] is given for progress recorded offline, which belongs to the account that was active then.
+     */
+    suspend fun markWatched(videoId: Long, time: Int, duration: Int, times: List<Int>, token: String? = prefs.token) {
+        call("PUT", "video/$videoId", token = token, body = buildJsonObject {
             put("time", time)
             put("duration", duration)
             put("date", System.currentTimeMillis() / 1000)

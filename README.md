@@ -54,6 +54,11 @@ Every commit to `main` builds and publishes a new version automatically.
   - Resumes where you stopped and syncs progress with your account, just like the website.
   - Skip the opening with one press or automatically; play the next episode automatically.
   - Portrait, landscape windowed (video and panel side by side) and fullscreen modes. Switching modes does not reload the video.
+- **Downloads for offline viewing.**
+  - Download single episodes or a whole season in the chosen dubbing, from any of the site's players, for example to watch on a plane.
+  - The app opens each episode in its own player, muted, finds the video stream the player loads and downloads it in the background with a progress notification.
+  - Downloaded episodes play without a connection in a built-in player: next episode, skip opening and resume work as online. Watch progress reaches your account once you are online again.
+  - Delete episodes one by one or a whole anime, or let the app delete an episode after you have watched it (Settings → Downloads).
 - **Android TV.** Leanback launcher banner, remote navigation with a clear focus highlight, side navigation rail, full player control from the remote.
 - **Languages.** English and Russian interface; titles and descriptions from the API follow the interface language.
 
@@ -78,14 +83,21 @@ Remote seeking works in Kodik, CVH and Alloha. Aksor has no control API, so OK t
   - Player events (time, duration, pause, episode end) reach the app through `postMessage`.
   - Play, pause and seek commands go back the same way.
 
+- **Downloads** do not depend on a particular player.
+  - The chosen episodes open one by one in a WebView, muted. Every request of the page and its iframes is watched, and a script injected into every frame reports HLS and DASH playlists by their content and `<video>` files with their duration.
+  - A candidate counts as the episode when its length matches the episode length from the API, so ads are skipped. The page is laid out at Full HD width with a desktop user agent, so players offer a good quality.
+  - [Media3](https://developer.android.com/media/media3) downloads the stream with the headers the player used, choosing the best video rendition and every audio track.
+  - Some players hand out links that stop working partway through an episode. While the download screen is open, the app gets a fresh link from the player and continues where the download stopped; otherwise "Continue" in Downloads does the same.
+
 ```
 app/src/main/java/com/yani/client/
   data/      API client (OkHttp + kotlinx.serialization), models, session and settings, player and episode selection
   ui/        Jetpack Compose screens: home, catalog, anime, lists, schedule, collections, profile
   player/    PlayerActivity: WebView player host, postMessage adapters, progress sync, screen modes
+  download/  Stream capture, Media3 downloads and download service, offline player and offline progress
 ```
 
-Stack: Kotlin 2.4, Jetpack Compose (Material 3), Navigation Compose, OkHttp 5, kotlinx.serialization, Coil 3, AndroidX WebKit.
+Stack: Kotlin 2.4, Jetpack Compose (Material 3), Navigation Compose, OkHttp 5, kotlinx.serialization, Coil 3, AndroidX WebKit, Media3 (ExoPlayer).
 
 ## Building
 
@@ -93,7 +105,7 @@ You need JDK 17+ and the Android SDK with platform 37. The SDK path goes into `l
 
 ```bash
 ./gradlew assembleDebug      # app/build/outputs/apk/debug/app-debug.apk
-./gradlew assembleRelease    # app/build/outputs/apk/release/app-release.apk (minified, about 2.3 MB)
+./gradlew assembleRelease    # app/build/outputs/apk/release/app-release.apk (minified, about 3.3 MB)
 ```
 
 Without a signing key the release build is signed with the debug key. To sign with your own key, add this to `~/.gradle/gradle.properties`:
@@ -139,6 +151,9 @@ but it does not publish a release.
 
 - **Ads.** Players such as Kodik show their own ads before an episode, the same as on the website.
   The "skip ad" button inside the player cannot be reached with a TV remote, so the ad simply plays to the end.
+- **Downloads.**
+  - An episode is downloaded in the quality its player starts with; Kodik, for example, often starts at 360p.
+  - Alloha signs every request to its video CDN and lets only about a quarter of an episode through, so its episodes usually cannot be downloaded completely. The app says so; choose another player for those episodes.
 - **Not implemented yet:**
   - private messages, friends, reviews, posts and news, blogger videos;
   - profile editing and registration (the app links to the website for sign-up);
@@ -149,7 +164,8 @@ but it does not publish a release.
 This is an unofficial project and is not affiliated with YummyAnime.
 The app does not host or distribute any video:
 - the catalog comes from the public YummyAnime API;
-- videos are shown by third-party players, exactly as on the website.
+- videos are shown by third-party players, exactly as on the website;
+- downloaded episodes are stored only on your device, for your own offline viewing.
 
 The API documentation allows personal use only; contact the YummyAnime owners about commercial use.
 All anime, posters and descriptions belong to their respective rights holders.

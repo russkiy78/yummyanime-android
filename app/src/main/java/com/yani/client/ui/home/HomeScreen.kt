@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +47,8 @@ import com.yani.client.ui.common.Load
 import com.yani.client.ui.common.ScreenPadding
 import com.yani.client.ui.common.SectionTitle
 import com.yani.client.ui.common.WatchCard
+import com.yani.client.ui.common.YButton
+import com.yani.client.ui.common.appContainer
 import com.yani.client.ui.common.appViewModel
 import com.yani.client.ui.common.dataOrNull
 import com.yani.client.ui.common.load
@@ -82,6 +87,8 @@ class HomeViewModel(private val api: YummyApi, prefs: Prefs) : ViewModel() {
 fun HomeScreen() {
     val vm = appViewModel { HomeViewModel(it.api, it.prefs) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val downloads by appContainer().downloads.episodes.collectAsStateWithLifecycle()
+    val nav = LocalNav.current
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshQuietly() }
 
     Column(Modifier.fillMaxSize()) {
@@ -93,6 +100,11 @@ fun HomeScreen() {
         ) {
             Text("Yummy", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = Accent)
             Text("Anime", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            Spacer(Modifier.weight(1f))
+            // Without a connection this is the way to what can still be watched.
+            if (downloads.isNotEmpty()) {
+                YButton(stringResource(R.string.downloads), onClick = { nav.openRoute(Routes.DOWNLOADS) }, icon = Icons.Filled.DownloadForOffline, primary = false)
+            }
         }
         LoadContent(state, vm::reload) { feed -> HomeContent(feed) }
     }

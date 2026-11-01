@@ -5,6 +5,8 @@ import com.yani.client.data.ApiHeadersInterceptor
 import com.yani.client.data.AuthManager
 import com.yani.client.data.Prefs
 import com.yani.client.data.YummyApi
+import com.yani.client.download.OfflineDownloads
+import com.yani.client.download.OfflineProgress
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -46,6 +48,13 @@ class AppContainer(app: Application) {
         }
         .build()
 
+    /** No API headers: for the video CDNs that downloads come from. */
+    val mediaHttp: OkHttpClient = baseHttp
+
     val api = YummyApi(apiHttp, json, prefs)
     val auth = AuthManager(api, prefs)
+
+    /** Created on first use, by the downloads screen or the download service. */
+    val downloads by lazy { OfflineDownloads(app, json, appScope) }
+    val offlineProgress = OfflineProgress(app, json, api, prefs, appScope)
 }

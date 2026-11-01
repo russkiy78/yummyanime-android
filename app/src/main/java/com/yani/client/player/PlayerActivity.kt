@@ -6,19 +6,15 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
-import android.os.SystemClock
-import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -40,7 +36,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
-import com.yani.client.BuildConfig
 import com.yani.client.R
 import com.yani.client.YummyApplication
 import com.yani.client.ui.common.LocalIsTv
@@ -173,21 +168,7 @@ class PlayerActivity : AppCompatActivity() {
             isFocusable = false
             isFocusableInTouchMode = false
         }
-        settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            mediaPlaybackRequiresUserGesture = false
-            loadWithOverviewMode = true
-            useWideViewPort = true
-            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-            // Popups (ads) are dropped: onCreateWindow is not implemented.
-            setSupportMultipleWindows(true)
-            javaScriptCanOpenWindowsAutomatically = false
-            // Some players serve a degraded page to WebView user agents.
-            userAgentString = userAgentString.replace("; wv", "")
-        }
-        CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-        WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
+        applyPlayerSettings()
 
         webViewClient = object : WebViewClient() {
             // Never let anything navigate the host page away; iframes navigate freely.
@@ -343,18 +324,7 @@ class PlayerActivity : AppCompatActivity() {
         vm.seekBy(direction * step)
     }
 
-    /** For players without a postMessage API: a tap in the middle toggles playback in most of them. */
-    private fun tapCenter() {
-        val x = webView.width / 2f
-        val y = webView.height / 2f
-        val time = SystemClock.uptimeMillis()
-        listOf(MotionEvent.ACTION_DOWN to time, MotionEvent.ACTION_UP to time + 60).forEach { (action, at) ->
-            val ev = MotionEvent.obtain(time, at, action, x, y, 0)
-            ev.source = InputDevice.SOURCE_TOUCHSCREEN
-            webView.dispatchTouchEvent(ev)
-            ev.recycle()
-        }
-    }
+    private fun tapCenter() = webView.tapCenter()
 
     // ---- Lifecycle ----
 

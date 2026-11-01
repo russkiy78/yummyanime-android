@@ -1,5 +1,13 @@
 package com.yani.client.player
 
+import android.annotation.SuppressLint
+import android.os.SystemClock
+import android.view.InputDevice
+import android.view.MotionEvent
+import android.webkit.CookieManager
+import android.webkit.WebSettings
+import android.webkit.WebView
+import com.yani.client.BuildConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -146,14 +154,18 @@ object PlayerAdapters {
         }
     }
 
-    /** Host page: a full-size iframe plus a relay for postMessage in both directions. */
-    fun hostHtml(src: String): String {
+    /**
+     * Host page: a full-size iframe plus a relay for postMessage in both directions.
+     * [viewport] lays the page out wider than the screen (it is zoomed out to fit): players pick the video quality
+     * by their size, so the download screen makes them believe they are on a large screen.
+     */
+    fun hostHtml(src: String, viewport: String = "width=device-width,initial-scale=1"): String {
         val escaped = src.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;")
         return """
             <!DOCTYPE html>
             <html><head>
             <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta name="viewport" content="$viewport">
             <style>
               html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden}
               iframe{position:fixed;top:0;left:0;width:100vw;height:100vh;border:0}
@@ -178,5 +190,38 @@ object PlayerAdapters {
             </script>
             </body></html>
         """.trimIndent()
+    }
+}
+
+/** WebView settings the embedded players need; shared by the player and the download screen. */
+@SuppressLint("SetJavaScriptEnabled")
+fun WebView.applyPlayerSettings() {
+    settings.apply {
+        javaScriptEnabled = true
+        domStorageEnabled = true
+        mediaPlaybackRequiresUserGesture = false
+        loadWithOverviewMode = true
+        useWideViewPort = true
+        mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+        // Popups (ads) are dropped: onCreateWindow is not implemented.
+        setSupportMultipleWindows(true)
+        javaScriptCanOpenWindowsAutomatically = false
+        // Some players serve a degraded page to WebView user agents.
+        userAgentString = userAgentString.replace("; wv", "")
+    }
+    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+    WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
+}
+
+/** For players without a postMessage API: a tap in the middle toggles playback in most of them. */
+fun WebView.tapCenter() {
+    val x = width / 2f
+    val y = height / 2f
+    val time = SystemClock.uptimeMillis()
+    listOf(MotionEvent.ACTION_DOWN to time, MotionEvent.ACTION_UP to time + 60).forEach { (action, at) ->
+        val ev = MotionEvent.obtain(time, at, action, x, y, 0)
+        ev.source = InputDevice.SOURCE_TOUCHSCREEN
+        dispatchTouchEvent(ev)
+        ev.recycle()
     }
 }

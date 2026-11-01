@@ -3,11 +3,11 @@ package com.yani.client.data
 /** What "watch" should open: resume an episode or start the next one. */
 data class ContinueTarget(val video: Video, val resume: Boolean)
 
-fun Video.isFinished(): Boolean {
-    val duration = duration ?: return false
-    val end = watched?.endTime ?: return false
-    return duration > 0 && (end >= duration * 0.9 || duration - end < 120)
-}
+fun Video.isFinished(): Boolean = isFinished(watched?.endTime ?: return false, duration ?: return false)
+
+/** Watched to the end: the last 10% or the last two minutes are usually the ending. */
+fun isFinished(position: Double, duration: Double): Boolean =
+    duration > 0 && (position >= duration * 0.9 || duration - position < 120)
 
 fun continueTarget(videos: List<Video>): ContinueTarget? {
     val last = videos.filter { it.watched != null }.maxByOrNull { it.watched!!.date } ?: return null
@@ -28,6 +28,23 @@ fun playerKey(playerName: String): String = playerName.lowercase().let { name ->
 fun orderedPlayers(videos: List<Video>, preferredKey: String): List<String> {
     val names = videos.map { it.data.player }.distinct()
     return names.sortedWith(compareBy({ playerKey(it) != preferredKey }, { knownPlayers.indexOf(playerKey(it)).let { i -> if (i < 0) 99 else i } }))
+}
+
+/** The dubbing to open: the wanted one, the same studio in another player, or the most complete one. */
+fun pickDubbing(dubbings: List<String>, wanted: String?): String {
+    if (wanted.isNullOrBlank()) return dubbings.first()
+    return dubbings.firstOrNull { it == wanted }
+        ?: dubbings.firstOrNull { dubbingStudio(it) == dubbingStudio(wanted) }
+        ?: dubbings.first()
+}
+
+/** Episode to open when nothing specific was asked for: continue watching, or start with the preferred player and dubbing. */
+fun defaultVideo(videos: List<Video>, settings: AppSettings): Video? {
+    if (videos.isEmpty()) return null
+    continueTarget(videos)?.let { return it.video }
+    val player = orderedPlayers(videos, settings.preferredPlayer).first()
+    val dubbing = pickDubbing(dubbingsFor(videos, player), settings.preferredDubbing)
+    return episodesFor(videos, player, dubbing).firstOrNull()
 }
 
 /** Dubbings of a player: the most complete ones first. */

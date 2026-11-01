@@ -27,6 +27,8 @@ data class AppSettings(
     val preferredDubbing: String = "",
     val autoNext: Boolean = true,
     val autoSkipOpening: Boolean = false,
+    /** Remove a downloaded episode once it has been watched to the end in the offline player. */
+    val deleteWatchedDownloads: Boolean = false,
     /** X-Application token; empty = use the one from BuildConfig. */
     val appToken: String = "",
 )
@@ -92,6 +94,7 @@ class Prefs(context: Context) {
             .putString(K_DUBBING, s.preferredDubbing)
             .putBoolean(K_AUTO_NEXT, s.autoNext)
             .putBoolean(K_AUTO_SKIP, s.autoSkipOpening)
+            .putBoolean(K_DELETE_WATCHED, s.deleteWatchedDownloads)
             .putString(K_APP_TOKEN, s.appToken)
             .apply()
     }
@@ -117,6 +120,7 @@ class Prefs(context: Context) {
         preferredDubbing = sp.getString(K_DUBBING, null).orEmpty(),
         autoNext = sp.getBoolean(K_AUTO_NEXT, true),
         autoSkipOpening = sp.getBoolean(K_AUTO_SKIP, false),
+        deleteWatchedDownloads = sp.getBoolean(K_DELETE_WATCHED, false),
         appToken = sp.getString(K_APP_TOKEN, null).orEmpty(),
     )
 
@@ -138,6 +142,7 @@ class Prefs(context: Context) {
         const val K_DUBBING = "preferred_dubbing"
         const val K_AUTO_NEXT = "auto_next"
         const val K_AUTO_SKIP = "auto_skip_opening"
+        const val K_DELETE_WATCHED = "delete_watched_downloads"
         const val K_APP_TOKEN = "app_token"
     }
 }

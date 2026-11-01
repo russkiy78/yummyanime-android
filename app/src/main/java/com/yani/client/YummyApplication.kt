@@ -15,7 +15,10 @@ class YummyApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
-        container.appScope.launch { container.auth.refreshIfNeeded() }
+        container.appScope.launch {
+            container.auth.refreshIfNeeded()
+            container.offlineProgress.sync()
+        }
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

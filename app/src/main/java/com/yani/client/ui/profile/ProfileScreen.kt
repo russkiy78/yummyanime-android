@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Collections
+import androidx.compose.material.icons.filled.DownloadForOffline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
@@ -207,6 +208,7 @@ fun ProfileScreen() {
                 }
                 MenuRow(Icons.Filled.History, stringResource(R.string.history)) { nav.openRoute(Routes.HISTORY) }
             }
+            MenuRow(Icons.Filled.DownloadForOffline, stringResource(R.string.downloads)) { nav.openRoute(Routes.DOWNLOADS) }
             MenuRow(Icons.Filled.Collections, stringResource(R.string.collections)) { nav.openRoute(Routes.COLLECTIONS) }
             MenuRow(Icons.Filled.Settings, stringResource(R.string.settings)) { nav.openRoute(Routes.SETTINGS) }
             MenuRow(Icons.AutoMirrored.Filled.OpenInNew, stringResource(R.string.open_website)) {

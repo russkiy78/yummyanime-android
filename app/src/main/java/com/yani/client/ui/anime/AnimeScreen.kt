@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.BookmarkAdded
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
@@ -452,6 +453,14 @@ private fun ActionButtons(
             icon = if (user.rating > 0) Icons.Filled.Star else Icons.Filled.StarBorder,
             primary = false,
         )
+        if (!noVideos && videos != null) {
+            YButton(
+                stringResource(R.string.download),
+                onClick = { nav.openRoute(Routes.downloadSelect(anime.id)) },
+                icon = Icons.Filled.Download,
+                primary = false,
+            )
+        }
     }
 }
 

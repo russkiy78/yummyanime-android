@@ -7,11 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.yani.client.AppContainer
 import com.yani.client.data.Video
 import com.yani.client.data.Watched
-import com.yani.client.data.continueTarget
-import com.yani.client.data.dubbingStudio
+import com.yani.client.data.defaultVideo
 import com.yani.client.data.dubbingsFor
 import com.yani.client.data.episodesFor
 import com.yani.client.data.orderedPlayers
+import com.yani.client.data.pickDubbing
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -106,20 +106,8 @@ class PlayerViewModel(
     }
 
     private fun initialVideo(videos: List<Video>): Video? {
-        if (videos.isEmpty()) return null
         requestedVideoId?.let { id -> videos.firstOrNull { it.id == id }?.let { return it } }
-        continueTarget(videos)?.let { return it.video }
-        val settings = prefs.settings.value
-        val player = orderedPlayers(videos, settings.preferredPlayer).first()
-        val dubbing = pickDubbing(dubbingsFor(videos, player), settings.preferredDubbing)
-        return episodesFor(videos, player, dubbing).firstOrNull()
-    }
-
-    private fun pickDubbing(dubbings: List<String>, wanted: String?): String {
-        if (wanted.isNullOrBlank()) return dubbings.first()
-        return dubbings.firstOrNull { it == wanted }
-            ?: dubbings.firstOrNull { dubbingStudio(it) == dubbingStudio(wanted) }
-            ?: dubbings.first()
+        return defaultVideo(videos, prefs.settings.value)
     }
 
     // ---- Selection ----

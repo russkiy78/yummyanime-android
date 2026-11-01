@@ -106,6 +106,16 @@ fun SettingsScreen() {
                 prefs.updateSettings { it.copy(autoSkipOpening = v) }
             }
 
+            Header(stringResource(R.string.downloads))
+            SwitchRow(stringResource(R.string.settings_delete_watched), settings.deleteWatchedDownloads) { v ->
+                prefs.updateSettings { it.copy(deleteWatchedDownloads = v) }
+            }
+            Text(
+                stringResource(R.string.settings_delete_watched_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
             Header(stringResource(R.string.settings_api))
             Text(
                 stringResource(R.string.settings_app_token_hint),

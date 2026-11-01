@@ -68,6 +68,8 @@ import com.yani.client.ui.common.NavActions
 import com.yani.client.ui.common.UserAvatar
 import com.yani.client.ui.common.appContainer
 import com.yani.client.ui.common.focusBorder
+import com.yani.client.ui.downloads.DownloadSelectScreen
+import com.yani.client.ui.downloads.DownloadsScreen
 import com.yani.client.ui.home.HomeScreen
 import com.yani.client.ui.lists.HistoryScreen
 import com.yani.client.ui.lists.ListsScreen
@@ -91,11 +93,14 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     const val SETTINGS = "settings"
     const val LOGIN = "login"
+    const val DOWNLOADS = "downloads"
+    const val DOWNLOAD_SELECT = "download/{id}"
 
     fun anime(id: String) = "anime/${Uri.encode(id)}"
     fun catalog(genre: Int?, title: String?) = "catalog?genre=${genre ?: ""}&title=${Uri.encode(title.orEmpty())}"
     fun comments(animeId: Int, title: String) = "comments/$animeId?title=${Uri.encode(title)}"
     fun collection(id: Int) = "collection/$id"
+    fun downloadSelect(animeId: Int) = "download/$animeId"
 }
 
 private data class TopLevel(val route: String, val navigateTo: String, val label: Int, val icon: ImageVector)
@@ -136,7 +141,7 @@ private fun navActions(nav: NavHostController, context: Context) = NavActions(
 )
 
 @Composable
-fun AppRoot(deepLinkAlias: String?, onDeepLinkConsumed: () -> Unit) {
+fun AppRoot(deepLinkRoute: String?, onDeepLinkConsumed: () -> Unit) {
     val nav = rememberNavController()
     val context = LocalContext.current
     val actions = remember(nav) { navActions(nav, context) }
@@ -145,9 +150,9 @@ fun AppRoot(deepLinkAlias: String?, onDeepLinkConsumed: () -> Unit) {
     val session by appContainer().prefs.session.collectAsStateWithLifecycle()
     val useRail = LocalIsTv.current || LocalConfiguration.current.screenWidthDp >= 840
 
-    LaunchedEffect(deepLinkAlias) {
-        if (deepLinkAlias != null) {
-            nav.navigate(Routes.anime(deepLinkAlias))
+    LaunchedEffect(deepLinkRoute) {
+        if (deepLinkRoute != null) {
+            nav.navigate(deepLinkRoute) { launchSingleTop = true }
             onDeepLinkConsumed()
         }
     }
@@ -246,5 +251,7 @@ private fun AppNavHost(nav: NavHostController) {
         composable(Routes.NOTIFICATIONS) { NotificationsScreen() }
         composable(Routes.SETTINGS) { SettingsScreen() }
         composable(Routes.LOGIN) { LoginScreen() }
+        composable(Routes.DOWNLOADS) { DownloadsScreen() }
+        composable(Routes.DOWNLOAD_SELECT) { e -> DownloadSelectScreen(e.arguments?.getString("id")?.toIntOrNull() ?: 0) }
     }
 }
